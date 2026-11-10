@@ -1,20 +1,22 @@
 {
-  "name": "Mis 18 ✨",
-  "short_name": "Mis 18 ✨",
+  "name": "Nuestra Cuenta Regresiva",
+  "short_name": "Tus 18 ✨",
   "start_url": "./index.html",
   "display": "standalone",
-  "background_color": "#120912",
-  "theme_color": "#ff6584",
+  "background_color": "#fbf8f9",
+  "theme_color": "#e07a93",
   "icons": [
     {
       "src": "img/icono.png",
       "sizes": "192x192",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     },
     {
       "src": "img/icono.png",
       "sizes": "512x512",
-      "type": "image/png"
+      "type": "image/png",
+      "purpose": "any maskable"
     }
   ]
 }
