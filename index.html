@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css">
+  <link rel="stylesheet" href="styles.css?v=1.2">
 
   <!-- Librería Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -176,11 +176,48 @@
   <!-- Botón flotante para volver a ver las instrucciones cuando quiera -->
   <button id="btnHelp" class="help-float-btn" type="button" title="Ver instrucciones" aria-label="Ver instrucciones">?</button>
 
+  <!-- Modal Panel de Monitoreo / Admin -->
+  <div id="adminModal" class="admin-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminTitle" aria-hidden="true">
+    <div class="admin-sheet">
+      <div class="admin-header">
+        <div>
+          <h3 id="adminTitle">Panel de Control 🔒</h3>
+          <p class="admin-sub">Monitoreo en vivo vía Firestore</p>
+        </div>
+        <button id="closeAdminBtn" class="admin-close" type="button" aria-label="Cerrar panel">&times;</button>
+      </div>
+
+      <div class="admin-stats">
+        <div class="stat-box">
+          <span class="stat-num" id="adminOpenedCount">0</span>
+          <span class="stat-label">Abiertos</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" id="adminPendingCount">18</span>
+          <span class="stat-label">Pendientes</span>
+        </div>
+        <div class="stat-box">
+          <span class="stat-num" id="adminPercent">0%</span>
+          <span class="stat-label">Progreso</span>
+        </div>
+      </div>
+
+      <div class="admin-actions">
+        <button id="resetAllBtn" class="btn-danger-outline" type="button">⚠️ Resetear Todo a 0</button>
+      </div>
+
+      <div class="admin-list-container">
+        <h4>Estado de los 18 Días</h4>
+        <div id="adminDaysList" class="admin-days-grid"></div>
+      </div>
+    </div>
+  </div>
+
   <!-- SDKs de Firebase -->
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <!-- Script con la lógica -->
-  <script src="script.js?v=1.1"></script>
+  <script src="script.js?v=1.2"></script>
 </body>
 </html>

@@ -278,6 +278,10 @@ function listenToProgress() {
       setUnlockedDays([]);
     }
     renderCalendar();
+    const adminModal = document.getElementById('adminModal');
+    if (adminModal && !adminModal.classList.contains('hidden')) {
+      renderAdminPanel();
+    }
   }, (error) => {
     console.error('Error al escuchar el progreso en Firestore:', error);
   });
@@ -367,16 +371,22 @@ function renderCalendar() {
     grid.appendChild(card);
   });
 
-  updateProgress();
+  updateProgressBar();
 }
 
-function updateProgress() {
-  const unlocked = getUnlockedDays();
-  const count = unlocked.length;
-  const pct = Math.round((count / 18) * 100);
-  
-  document.getElementById('progressBar').style.width = `${pct}%`;
-  document.getElementById('progressText').textContent = `${count} de 18 sorpresas desbloqueadas (${pct}%)`;
+function updateProgressBar() {
+  const progressBar = document.getElementById('progressBar');
+  const progressText = document.getElementById('progressText');
+  if (!progressBar || !progressText) return;
+
+  const totalDays = 18;
+  const count = getUnlockedDays().length;
+  const percentage = Math.round((count / totalDays) * 100);
+
+  progressBar.style.width = `${percentage}%`;
+  progressText.textContent = count === totalDays
+    ? '🎉 ¡Todas las sorpresas desbloqueadas! (100%)'
+    : `${count} de ${totalDays} sorpresas desbloqueadas (${percentage}%)`;
 }
 
 /* ==========================================================
@@ -588,6 +598,162 @@ function generateBackgroundPattern() {
   }
 }
 
+/* ==========================================================
+   PANEL SECRETO DE MONITOREO (MODO ADMIN)
+========================================================== */
+const ADMIN_PIN = '0707';
+let titleClickCount = 0;
+let titleClickTimer = null;
+
+function openAdminWithAuth() {
+  const inputPin = prompt('🔒 Acceso Administrador - Ingresa tu PIN:');
+  if (inputPin !== ADMIN_PIN) {
+    if (inputPin !== null) alert('PIN incorrecto.');
+    return;
+  }
+
+  const modal = document.getElementById('adminModal');
+  renderAdminPanel();
+  modal.classList.remove('hidden');
+  modal.setAttribute('aria-hidden', 'false');
+  document.getElementById('closeAdminBtn').focus();
+}
+
+function closeAdminPanel() {
+  const modal = document.getElementById('adminModal');
+  modal.classList.add('hidden');
+  modal.setAttribute('aria-hidden', 'true');
+}
+
+function renderAdminPanel() {
+  const listEl = document.getElementById('adminDaysList');
+  if (!listEl) return;
+
+  const total = 18;
+  const openedCount = getUnlockedDays().length;
+  const percent = Math.round((openedCount / total) * 100);
+  document.getElementById('adminOpenedCount').textContent = openedCount;
+  document.getElementById('adminPendingCount').textContent = total - openedCount;
+  document.getElementById('adminPercent').textContent = `${percent}%`;
+  listEl.replaceChildren();
+
+  for (let day = 1; day <= total; day++) {
+    const isUnlocked = getUnlockedDays().includes(day);
+    const dayItem = document.createElement('div');
+    dayItem.className = `admin-day-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+
+    const dayInfo = document.createElement('div');
+    dayInfo.className = 'admin-day-info';
+
+    const dayNumber = document.createElement('span');
+    dayNumber.className = 'admin-day-num';
+    dayNumber.textContent = `Día ${day}`;
+
+    const dayStatus = document.createElement('span');
+    dayStatus.className = 'admin-day-status';
+    dayStatus.textContent = isUnlocked ? '🔓 Abierto' : '🔒 Bloqueado';
+
+    const toggleButton = document.createElement('button');
+    toggleButton.className = 'btn-toggle-day';
+    toggleButton.type = 'button';
+    toggleButton.dataset.day = day;
+    toggleButton.textContent = isUnlocked ? 'Bloquear' : 'Forzar apertura';
+
+    dayInfo.append(dayNumber, dayStatus);
+    dayItem.append(dayInfo, toggleButton);
+    listEl.appendChild(dayItem);
+  }
+}
+
+async function toggleDayDirect(dayNumber) {
+  if (!docRef) {
+    alert('Firestore no está disponible. No se pudo actualizar el día.');
+    return;
+  }
+  if (!Number.isInteger(dayNumber) || dayNumber < 1 || dayNumber > 18) {
+    console.error('Número de día inválido para el panel de administración:', dayNumber);
+    return;
+  }
+
+  try {
+    const operation = getUnlockedDays().includes(dayNumber)
+      ? firebase.firestore.FieldValue.arrayRemove(dayNumber)
+      : firebase.firestore.FieldValue.arrayUnion(dayNumber);
+    await docRef.set({
+      days: operation,
+      ultimoDesbloqueo: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error al actualizar estado en Firestore:', error);
+    alert('Error al sincronizar con Firebase.');
+  }
+}
+
+function initAdminPanel() {
+  const title = document.querySelector('.main-title');
+  const modal = document.getElementById('adminModal');
+  const closeButton = document.getElementById('closeAdminBtn');
+  const daysList = document.getElementById('adminDaysList');
+  const resetButton = document.getElementById('resetAllBtn');
+
+  title.tabIndex = 0;
+  title.setAttribute('role', 'button');
+  title.setAttribute('aria-label', 'Abrir panel de administración: pulsa tres veces');
+  title.style.cursor = 'pointer';
+
+  const handleTitleActivation = () => {
+    titleClickCount += 1;
+    clearTimeout(titleClickTimer);
+
+    if (titleClickCount === 3) {
+      titleClickCount = 0;
+      openAdminWithAuth();
+    } else {
+      titleClickTimer = setTimeout(() => {
+        titleClickCount = 0;
+      }, 700);
+    }
+  };
+
+  title.addEventListener('click', handleTitleActivation);
+  title.addEventListener('keydown', (event) => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      handleTitleActivation();
+    }
+  });
+  closeButton.addEventListener('click', closeAdminPanel);
+  modal.addEventListener('click', (event) => {
+    if (event.target === modal) closeAdminPanel();
+  });
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
+      closeAdminPanel();
+    }
+  });
+  daysList.addEventListener('click', (event) => {
+    const button = event.target.closest('.btn-toggle-day');
+    if (button) toggleDayDirect(Number(button.dataset.day));
+  });
+  resetButton.addEventListener('click', async () => {
+    if (!confirm('⚠️ ¿Seguro que quieres resetear TODO el calendario a 0?')) return;
+    if (!docRef) {
+      alert('Firestore no está disponible. No se pudo reiniciar el calendario.');
+      return;
+    }
+
+    try {
+      await docRef.set({
+        days: [],
+        ultimoReseteo: new Date().toISOString()
+      }, { merge: true });
+    } catch (error) {
+      console.error('Error al resetear el progreso desde el panel:', error);
+      alert('No se pudo resetear la base de datos.');
+    }
+  });
+}
+
 // Permitir tecla Enter en el campo de texto
 document.addEventListener('DOMContentLoaded', () => {
   renderCalendar();
@@ -595,6 +761,7 @@ document.addEventListener('DOMContentLoaded', () => {
   generateBackgroundPattern();
   initFirebase();
   initWelcomeModal();
+  initAdminPanel();
   window.addEventListener('resize', generateBackgroundPattern);
   
   document.getElementById('codeInput').addEventListener('keydown', (e) => {
