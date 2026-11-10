@@ -1,0 +1,473 @@
+/* ==========================================================
+   CONFIGURACIÓN DE LOS 18 DÍAS (19 Noviembre al 6 Diciembre)
+   Modifica aquí los códigos, fotos, títulos y mensajes
+========================================================== */
+const daysData = [
+  {
+    day: 1,
+    unlockDate: "2026-11-19",
+    dateText: "19 Nov",
+    fullDate: "19 de Noviembre",
+    code: "ABRAZO",
+    hint: "Pista: Lo primero que te doy al vernos",
+    giftTitle: "El inicio de algo muy lindo 🍫",
+    giftPhoto: "img/regalo-1.jpg",
+    message: "¡Arrancan tus 18 días! Oficialmente empieza la cuenta regresiva para tus 18 años. Hoy empieza con un abrazo apretado y este primer detalle."
+  },
+  {
+    day: 2,
+    unlockDate: "2026-11-20",
+    dateText: "20 Nov",
+    fullDate: "20 de Noviembre",
+    code: "COQUETA",
+    hint: "Pista: Algo que te digo cuando te arreglas",
+    giftTitle: "Skincare & Consentidera ✨",
+    giftPhoto: "img/regalo-2.jpg",
+    message: "Para que te tomes un tiempo para ti y te consientas. Estás preciosa todos los días, pero hoy te toca relajarte."
+  },
+  {
+    day: 3,
+    unlockDate: "2026-11-21",
+    dateText: "21 Nov",
+    fullDate: "21 de Noviembre",
+    code: "POSTRE",
+    hint: "Pista: Siempre hay espacio para uno",
+    giftTitle: "Vale por tu postre favorito 🍰",
+    giftPhoto: "img/regalo-3.jpg",
+    message: "Este vale es canjeable cuando quieras. Tú eliges el lugar y yo me encargo de llevarte."
+  },
+  {
+    day: 4,
+    unlockDate: "2026-11-22",
+    dateText: "22 Nov",
+    fullDate: "22 de Noviembre",
+    code: "SONRISA",
+    hint: "Pista: Lo más lindo de tu carita",
+    giftTitle: "Un recuerdo especial 📸",
+    giftPhoto: "img/regalo-4.jpg",
+    message: "Amo cada vez que te ríes conmigo. Hoy quiero recordarte lo feliz que me haces."
+  },
+  {
+    day: 5,
+    unlockDate: "2026-11-23",
+    dateText: "23 Nov",
+    fullDate: "23 de Noviembre",
+    code: "CARTA",
+    hint: "Pista: Tinta y papel dedicados a ti",
+    giftTitle: "Una cartita física escondida 💌",
+    giftPhoto: "img/regalo-5.jpg",
+    message: "Revisa bien en tu bolso o donde te dije... Hay unas palabras escritas a mano esperándote."
+  },
+  {
+    day: 6,
+    unlockDate: "2026-11-24",
+    dateText: "24 Nov",
+    fullDate: "24 de Noviembre",
+    code: "BESO",
+    hint: "Pista: De esos que no se olvidan",
+    giftTitle: "Tu chocolate favorito 🍓",
+    giftPhoto: "img/regalo-6.jpg",
+    message: "Un antojito dulce para alegrarte la tarde mientras seguimos descontando días."
+  },
+  {
+    day: 7,
+    unlockDate: "2026-11-25",
+    dateText: "25 Nov",
+    fullDate: "25 de Noviembre",
+    code: "LUNA",
+    hint: "Pista: La miramos juntos de noche",
+    giftTitle: "Noche de pelis y arrunchis 🍿",
+    giftPhoto: "img/regalo-7.jpg",
+    message: "Vale oficial por una tarde de películas, cobijas y tus snacks preferidos sin interrupciones."
+  },
+  {
+    day: 8,
+    unlockDate: "2026-11-26",
+    dateText: "26 Nov",
+    fullDate: "26 de Noviembre",
+    code: "PASEO",
+    hint: "Pista: Cuando salimos sin rumbo fijo",
+    giftTitle: "Una salida especial 🍦",
+    giftPhoto: "img/regalo-8.jpg",
+    message: "Vamos por un helado o a dar una vuelta para charlar rico como siempre nos gusta."
+  },
+  {
+    day: 9,
+    unlockDate: "2026-11-27",
+    dateText: "27 Nov",
+    fullDate: "27 de Noviembre",
+    code: "OJITOS",
+    hint: "Pista: Me pierdo en ellos",
+    giftTitle: "Un detalle para tu cuarto 🌸",
+    giftPhoto: "img/regalo-9.jpg",
+    message: "¡Mitad de camino cumplida! Ya llevamos 9 días y falta poco para el gran día."
+  },
+  {
+    day: 10,
+    unlockDate: "2026-11-28",
+    dateText: "28 Nov",
+    fullDate: "28 de Noviembre",
+    code: "MUSICA",
+    hint: "Pista: Lo que suena cuando pienso en ti",
+    giftTitle: "Nuestra playlist dedicada 🎧",
+    giftPhoto: "img/regalo-10.jpg",
+    message: "Agregué varias canciones que me recuerdan a ti en cada momento."
+  },
+  {
+    day: 11,
+    unlockDate: "2026-11-29",
+    dateText: "29 Nov",
+    fullDate: "29 de Noviembre",
+    code: "SIEMPRE",
+    hint: "Pista: Lo que dura una promesa",
+    giftTitle: "Un accesorio lindo 💍",
+    giftPhoto: "img/regalo-11.jpg",
+    message: "Para que lo lleves puesto y te acuerdes de mí donde sea que vayas."
+  },
+  {
+    day: 12,
+    unlockDate: "2026-11-30",
+    dateText: "30 Nov",
+    fullDate: "30 de Noviembre",
+    code: "NOVIEMBRE",
+    hint: "Pista: El mes que se acaba hoy",
+    giftTitle: "¡Despedimos noviembre! ☕",
+    giftPhoto: "img/regalo-12.jpg",
+    message: "Mañana empieza tu mes. Solo faltan 6 días para tus 18."
+  },
+  {
+    day: 13,
+    unlockDate: "2026-12-01",
+    dateText: "1 Dic",
+    fullDate: "1 de Diciembre",
+    code: "LLEGAN",
+    hint: "Pista: Ya se siente diciembre",
+    giftTitle: "Café o merienda sorpresa 🥐",
+    giftPhoto: "img/regalo-13.jpg",
+    message: "Entramos a la recta final. El 6 de diciembre está a la vuelta de la esquina."
+  },
+  {
+    day: 14,
+    unlockDate: "2026-12-02",
+    dateText: "2 Dic",
+    fullDate: "2 de Diciembre",
+    code: "REINA",
+    hint: "Pista: La corona te queda perfecta",
+    giftTitle: "Vale de masaje o consentidera 💆‍♀️",
+    giftPhoto: "img/regalo-14.jpg",
+    message: "Solo para que descanses y te sientas tratada como la reina que eres."
+  },
+  {
+    day: 15,
+    unlockDate: "2026-12-03",
+    dateText: "3 Dic",
+    fullDate: "3 de Diciembre",
+    code: "FALTAN3",
+    hint: "Pista: Cuántos días quedan",
+    giftTitle: "Un postrecito especial 🍪",
+    giftPhoto: "img/regalo-15.jpg",
+    message: "¡3 días! La emoción va subiendo y ya casi llega la sorpresa mayor."
+  },
+  {
+    day: 16,
+    unlockDate: "2026-12-04",
+    dateText: "4 Dic",
+    fullDate: "4 de Diciembre",
+    code: "MAGIA",
+    hint: "Pista: Lo que siento contigo",
+    giftTitle: "Un ramo o florecita 💐",
+    giftPhoto: "img/regalo-16.jpg",
+    message: "Flores para alegrar tu día previo a tu fin de semana de fiesta."
+  },
+  {
+    day: 17,
+    unlockDate: "2026-12-05",
+    dateText: "5 Dic",
+    fullDate: "5 de Diciembre",
+    code: "MANANA",
+    hint: "Pista: La víspera esperada",
+    giftTitle: "La noche previa 🌙✨",
+    giftPhoto: "img/regalo-17.jpg",
+    message: "¡Mañana cumples 18! Duerme rico y prepárate para celebrar por todo lo alto."
+  },
+  {
+    day: 18,
+    unlockDate: "2026-12-06",
+    dateText: "6 Dic",
+    fullDate: "6 de Diciembre",
+    code: "FELICES18",
+    hint: "Pista: La frase del día más importante",
+    giftTitle: "¡FELICES 18 AÑOS MI AMOR! 👑🎁",
+    giftPhoto: "img/regalo-18.jpg",
+    message: "Llegó tu día. Eres una persona increíble, llena de metas y con un corazón enorme. Gracias por dejarme ser parte de tu vida y celebrar estos 18 años juntos. ¡Te amo con todo mi ser!"
+  }
+];
+
+// MODO PRUEBAS:
+// Ponlo en true mientras programas para poder abrir cualquier día y probar tus códigos.
+// Cuando se la envíes a ella, cámbialo a false.
+const DEBUG_BYPASS_DATE = false;
+
+function isDayDateAvailable(unlockDateStr) {
+  if (DEBUG_BYPASS_DATE) return true;
+
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
+
+  const [year, month, day] = unlockDateStr.split('-').map(Number);
+  const targetDate = new Date(year, month - 1, day);
+  targetDate.setHours(0, 0, 0, 0);
+
+  return today >= targetDate;
+}
+
+/* ==========================================================
+   ESTADO Y LOCALSTORAGE
+========================================================== */
+const STORAGE_KEY = 'advent_18_unlocked_days';
+let activeDay = null;
+
+function getUnlockedDays() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  return data ? JSON.parse(data) : [];
+}
+
+function saveUnlockedDay(dayNum) {
+  const current = getUnlockedDays();
+  if (!current.includes(dayNum)) {
+    current.push(dayNum);
+    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+  }
+}
+
+/* ==========================================================
+   RENDER DEL CALENDARIO
+========================================================== */
+function renderCalendar() {
+  const grid = document.getElementById('calendarGrid');
+  const unlocked = getUnlockedDays();
+  const now = new Date();
+  const todayDate = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`;
+  grid.innerHTML = '';
+
+  daysData.forEach(item => {
+    const isUnlocked = unlocked.includes(item.day);
+    const isFutureLocked = !isDayDateAvailable(item.unlockDate);
+    const isCurrentActive = !isUnlocked && item.unlockDate === todayDate;
+    const card = document.createElement('div');
+    card.className = `day-card ${isUnlocked ? 'unlocked' : ''} ${isFutureLocked ? 'future-locked' : ''} ${isCurrentActive ? 'current-active' : ''} ${item.day === 18 ? 'day-18' : ''}`;
+    card.onclick = () => openDayModal(item.day);
+
+    let statusIcon = isUnlocked ? '🎁' : '🔒';
+    if (item.day === 18 && !isUnlocked) statusIcon = '👑';
+
+    card.innerHTML = `
+      <span class="card-num">${item.day}</span>
+      <span class="card-date">${item.dateText}</span>
+      <span class="card-status">${statusIcon}</span>
+    `;
+    grid.appendChild(card);
+  });
+
+  updateProgress();
+}
+
+function updateProgress() {
+  const unlocked = getUnlockedDays();
+  const count = unlocked.length;
+  const pct = Math.round((count / 18) * 100);
+  
+  document.getElementById('progressBar').style.width = `${pct}%`;
+  document.getElementById('progressText').textContent = `${count} de 18 sorpresas desbloqueadas (${pct}%)`;
+}
+
+/* ==========================================================
+   LÓGICA DEL MODAL
+========================================================== */
+function openDayModal(dayNum) {
+  activeDay = daysData.find(d => d.day === dayNum);
+  if (!activeDay) return;
+
+  const unlocked = getUnlockedDays();
+  const isAlreadyUnlocked = unlocked.includes(dayNum);
+  const isDateReached = isDayDateAvailable(activeDay.unlockDate);
+
+  const modal = document.getElementById('unlockModal');
+  const codeSec = document.getElementById('codeSection');
+  const rewardSec = document.getElementById('rewardSection');
+  const dateLockSec = document.getElementById('dateLockSection');
+  const errorText = document.getElementById('errorText');
+  const input = document.getElementById('codeInput');
+
+  codeSec.classList.add('hidden');
+  rewardSec.classList.add('hidden');
+  dateLockSec.classList.add('hidden');
+  errorText.classList.add('hidden');
+  input.value = '';
+
+  if (isAlreadyUnlocked) {
+    showRewardView(activeDay);
+  } else if (!isDateReached) {
+    dateLockSec.classList.remove('hidden');
+    document.getElementById('dateLockTitle').textContent = `Día ${activeDay.day}`;
+    document.getElementById('dateLockDate').textContent = activeDay.fullDate;
+    document.getElementById('dateLockMessage').innerHTML =
+      `Este regalito aún está sellado con candado de tiempo.<br><br>Vuelve el <strong>${activeDay.fullDate}</strong> para desbloquearlo con tu clave secreta. ✨`;
+  } else {
+    codeSec.classList.remove('hidden');
+    document.getElementById('modalDayNumber').textContent = `Día ${activeDay.day}`;
+    document.getElementById('modalDateTag').textContent = activeDay.fullDate;
+    document.getElementById('hintText').textContent = activeDay.hint || '';
+    
+    setTimeout(() => input.focus(), 250);
+  }
+
+  modal.classList.remove('hidden');
+}
+
+function verifyCode() {
+  if (!activeDay) return;
+
+  const inputEl = document.getElementById('codeInput');
+  const userCode = inputEl.value.trim().toUpperCase();
+  const validCode = activeDay.code.trim().toUpperCase();
+  const errorText = document.getElementById('errorText');
+
+  if (userCode === validCode) {
+    saveUnlockedDay(activeDay.day);
+    triggerConfetti();
+    renderCalendar();
+    showRewardView(activeDay);
+  } else {
+    errorText.classList.remove('hidden');
+    inputEl.classList.add('shake-input');
+    setTimeout(() => inputEl.classList.remove('shake-input'), 400);
+  }
+}
+
+function showRewardView(item) {
+  document.getElementById('codeSection').classList.add('hidden');
+  const rewardSec = document.getElementById('rewardSection');
+  rewardSec.classList.remove('hidden');
+
+  document.getElementById('rewardTitle').textContent = item.giftTitle;
+  document.getElementById('rewardMessage').textContent = item.message;
+  
+  const photoEl = document.getElementById('rewardPhoto');
+  photoEl.src = item.giftPhoto;
+}
+
+function closeModal() {
+  document.getElementById('unlockModal').classList.add('hidden');
+  activeDay = null;
+}
+
+function handleBackdropClick(e) {
+  if (e.target.id === 'unlockModal') closeModal();
+}
+
+function handleImageError(img) {
+  // Imagen de respaldo estética si aún no has puesto el archivo en la carpeta img
+  img.src = 'https://images.unsplash.com/photo-1513201099705-a9742e15a5be?w=800&auto=format&fit=crop&q=80';
+}
+
+function triggerConfetti() {
+  if (typeof confetti === 'function') {
+    confetti({
+      particleCount: 80,
+      spread: 70,
+      origin: { y: 0.6 }
+    });
+  }
+}
+
+function resetProgress() {
+  if (confirm('¿Quieres reiniciar todas las casillas para probar desde cero?')) {
+    localStorage.removeItem(STORAGE_KEY);
+    renderCalendar();
+  }
+}
+
+/* ==========================================================
+   RELOJ CONTADOR EN TIEMPO REAL AL 6 DE DICIEMBRE
+========================================================== */
+function initCountdown() {
+  const targetDate = new Date(2026, 11, 6, 0, 0, 0).getTime();
+
+  const daysEl = document.getElementById('daysCount');
+  const hoursEl = document.getElementById('hoursCount');
+  const minutesEl = document.getElementById('minutesCount');
+  const secondsEl = document.getElementById('secondsCount');
+  const titleEl = document.querySelector('.countdown-title');
+
+  function updateTimer() {
+    const distance = targetDate - new Date().getTime();
+
+    if (distance <= 0) {
+      daysEl.textContent = '00';
+      hoursEl.textContent = '00';
+      minutesEl.textContent = '00';
+      secondsEl.textContent = '00';
+      titleEl.textContent = '¡HOY ES TU CUMPLEAÑOS! 👑🎉';
+      return;
+    }
+
+    const days = Math.floor(distance / (1000 * 60 * 60 * 24));
+    const hours = Math.floor((distance % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+    const minutes = Math.floor((distance % (1000 * 60 * 60)) / (1000 * 60));
+    const seconds = Math.floor((distance % (1000 * 60)) / 1000);
+
+    daysEl.textContent = String(days).padStart(2, '0');
+    hoursEl.textContent = String(hours).padStart(2, '0');
+    minutesEl.textContent = String(minutes).padStart(2, '0');
+    secondsEl.textContent = String(seconds).padStart(2, '0');
+  }
+
+  updateTimer();
+  setInterval(updateTimer, 1000);
+}
+
+/* ==========================================================
+   GENERADOR AUTOMÁTICO DE PATRÓN DE FONDO
+========================================================== */
+const backgroundPhotos = [
+  'img/bebe-1.webp',
+  'img/bebe-2.jpg',
+  'img/bebe-3.jpg',
+  'img/bebe-4.jpg',
+  'img/bebe-5.jpg'
+];
+
+function generateBackgroundPattern() {
+  const container = document.getElementById('patternBackground');
+  if (!container || backgroundPhotos.length === 0) return;
+
+  container.innerHTML = '';
+
+  const totalItems = Math.ceil((window.innerWidth * window.innerHeight) / 9000);
+  const rotations = [-5, -2, 0, 3, 6, -3, 4];
+
+  for (let i = 0; i < totalItems; i++) {
+    const item = document.createElement('div');
+    item.className = 'pattern-item';
+
+    const photoSrc = backgroundPhotos[i % backgroundPhotos.length];
+    const rotation = rotations[i % rotations.length];
+
+    item.style.backgroundImage = `url('${photoSrc}')`;
+    item.style.setProperty('--rot', `${rotation}deg`);
+    container.appendChild(item);
+  }
+}
+
+// Permitir tecla Enter en el campo de texto
+document.addEventListener('DOMContentLoaded', () => {
+  renderCalendar();
+  initCountdown();
+  generateBackgroundPattern();
+  window.addEventListener('resize', generateBackgroundPattern);
+  
+  document.getElementById('codeInput').addEventListener('keydown', (e) => {
+    if (e.key === 'Enter') verifyCode();
+  });
+});
