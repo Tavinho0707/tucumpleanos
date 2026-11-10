@@ -1,4 +1,16 @@
 /* ==========================================================
+   CONEXIÓN CON FIREBASE FIRESTORE
+========================================================== */
+const firebaseConfig = {
+  apiKey: "AIzaSyCclwyUdgqKrJFj6sfUXj5rzAswrXwavc0",
+  authDomain: "tucumpleanos-b8dfd.firebaseapp.com",
+  projectId: "tucumpleanos-b8dfd",
+  storageBucket: "tucumpleanos-b8dfd.firebasestorage.app",
+  messagingSenderId: "477862343477",
+  appId: "1:477862343477:web:96b7d81084c7d06119d27c"
+};
+
+/* ==========================================================
    CONFIGURACIÓN DE LOS 18 DÍAS (19 Noviembre al 6 Diciembre)
    Modifica aquí los códigos, fotos, títulos y mensajes
 ========================================================== */
@@ -226,17 +238,103 @@ function isDayDateAvailable(unlockDateStr) {
 ========================================================== */
 const STORAGE_KEY = 'advent_18_unlocked_days';
 let activeDay = null;
+let db = null;
+let docRef = null;
+let unlockedDays = loadLocalUnlockedDays();
+
+function loadLocalUnlockedDays() {
+  const data = localStorage.getItem(STORAGE_KEY);
+  const days = data ? JSON.parse(data) : [];
+  return Array.isArray(days) ? [...new Set(days.filter(day => Number.isInteger(day) && day >= 1 && day <= 18))] : [];
+}
 
 function getUnlockedDays() {
-  const data = localStorage.getItem(STORAGE_KEY);
-  return data ? JSON.parse(data) : [];
+  return unlockedDays;
+}
+
+function setUnlockedDays(days) {
+  unlockedDays = [...new Set(days.filter(day => Number.isInteger(day) && day >= 1 && day <= 18))];
+  localStorage.setItem(STORAGE_KEY, JSON.stringify(unlockedDays));
 }
 
 function saveUnlockedDay(dayNum) {
   const current = getUnlockedDays();
   if (!current.includes(dayNum)) {
-    current.push(dayNum);
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(current));
+    setUnlockedDays([...current, dayNum]);
+    if (docRef) {
+      saveUnlockedDayToFirebase(dayNum);
+    }
+  }
+}
+
+function listenToProgress() {
+  docRef.onSnapshot((snapshot) => {
+    if (snapshot.exists) {
+      const days = snapshot.data().days;
+      setUnlockedDays(Array.isArray(days) ? days : []);
+    } else if (unlockedDays.length > 0) {
+      saveUnlockedDaysToFirebase(unlockedDays);
+    } else {
+      setUnlockedDays([]);
+    }
+    renderCalendar();
+  }, (error) => {
+    console.error('Error al escuchar el progreso en Firestore:', error);
+  });
+}
+
+async function saveUnlockedDaysToFirebase(days) {
+  try {
+    await docRef.set({
+      days: firebase.firestore.FieldValue.arrayUnion(...days),
+      fechaActualizacion: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error al migrar el progreso a Firestore:', error);
+  }
+}
+
+async function saveUnlockedDayToFirebase(dayNumber) {
+  try {
+    await docRef.set({
+      days: firebase.firestore.FieldValue.arrayUnion(dayNumber),
+      fechaActualizacion: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error al guardar el progreso en Firestore:', error);
+  }
+}
+
+async function resetFirebaseProgress() {
+  if (!docRef) return;
+
+  try {
+    await docRef.set({
+      days: [],
+      fechaActualizacion: new Date().toISOString()
+    }, { merge: true });
+  } catch (error) {
+    console.error('Error al reiniciar el progreso en Firestore:', error);
+  }
+}
+
+function initFirebase() {
+  if (typeof firebase === 'undefined' || !firebase.initializeApp || !firebase.firestore) {
+    console.error('No se pudieron cargar los SDKs de Firebase; se usará el progreso local.');
+    return;
+  }
+
+  try {
+    if (firebase.apps.length === 0) {
+      firebase.initializeApp(firebaseConfig);
+    }
+    db = firebase.firestore();
+    docRef = db.collection('advent_calendar').doc('progreso');
+    listenToProgress();
+  } catch (error) {
+    db = null;
+    docRef = null;
+    console.error('Error al inicializar Firebase; se usará el progreso local:', error);
   }
 }
 
@@ -384,8 +482,38 @@ function triggerConfetti() {
 function resetProgress() {
   if (confirm('¿Quieres reiniciar todas las casillas para probar desde cero?')) {
     localStorage.removeItem(STORAGE_KEY);
+    setUnlockedDays([]);
+    resetFirebaseProgress();
     renderCalendar();
   }
+}
+
+/* ==========================================================
+   LÓGICA DEL MODAL DE INSTRUCCIONES / BIENVENIDA
+========================================================== */
+function initWelcomeModal() {
+  const modal = document.getElementById('welcomeModal');
+  const btnStart = document.getElementById('btnStartAdventure');
+  const btnHelp = document.getElementById('btnHelp');
+
+  if (!localStorage.getItem('hasSeenInstructions')) {
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    btnStart.focus();
+  }
+
+  btnStart.addEventListener('click', () => {
+    modal.classList.add('hidden');
+    modal.setAttribute('aria-hidden', 'true');
+    localStorage.setItem('hasSeenInstructions', 'true');
+    btnHelp.focus();
+  });
+
+  btnHelp.addEventListener('click', () => {
+    modal.classList.remove('hidden');
+    modal.setAttribute('aria-hidden', 'false');
+    btnStart.focus();
+  });
 }
 
 /* ==========================================================
@@ -465,6 +593,8 @@ document.addEventListener('DOMContentLoaded', () => {
   renderCalendar();
   initCountdown();
   generateBackgroundPattern();
+  initFirebase();
+  initWelcomeModal();
   window.addEventListener('resize', generateBackgroundPattern);
   
   document.getElementById('codeInput').addEventListener('keydown', (e) => {
