@@ -17,14 +17,14 @@ const firebaseConfig = {
 const daysData = [
   {
     day: 1,
-    unlockDate: "2026-11-19",
-    dateText: "19 Nov",
-    fullDate: "19 de Noviembre",
-    code: "ABRAZO",
-    hint: "Pista: Lo primero que te doy al vernos",
-    giftTitle: "El inicio de algo muy lindo 🍫",
-    giftPhoto: "img/regalo-1.jpg",
-    message: "¡Arrancan tus 18 días! Oficialmente empieza la cuenta regresiva para tus 18 años. Hoy empieza con un abrazo apretado y este primer detalle."
+    unlockDate: "2026-11-10",
+    dateText: "10 Nov",
+    fullDate: "10 de Noviembre",
+    code: "PRUEBA10",
+    hint: "Pista de prueba: Escribe 'prueba10'",
+    giftTitle: "¡Prueba de fuego exitosa!",
+    giftPhoto: "img/icono.png",
+    message: "Si estás leyendo esto, significa que Firebase, el modal y el desbloqueo están funcionando al 100%."
   },
   {
     day: 2,
