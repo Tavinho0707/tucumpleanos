@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1.2">
+  <link rel="stylesheet" href="styles.css?v=1.5">
 
   <!-- Librería Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -89,7 +89,7 @@
         <div class="modal-header-icon">🔐</div>
         <h3 id="modalDayNumber" class="modal-title">Día 1</h3>
         <p id="modalDateTag" class="modal-date">19 de Noviembre</p>
-        <p class="modal-instruction">Introduce la clave secreta que te envié hoy para ver qué hay adentro:</p>
+        <p class="modal-instruction">Encuentra la pista escondida en tu cuarto e ingresa aquí la clave secreta:</p>
         
         <div class="input-card">
           <input 
@@ -103,8 +103,11 @@
           <button id="btnSubmitCode" onclick="verifyCode()">Desbloquear ✨</button>
         </div>
 
-        <p id="hintText" class="modal-hint"></p>
-        <p id="errorText" class="modal-error hidden">Ese código no es el correcto... ¡Intenta otra vez! 🙈</p>
+        <div id="hintContainer" class="hint-box">
+          <span class="hint-icon" aria-hidden="true">🔍</span>
+          <span id="hintText" class="hint-text" aria-live="polite"></span>
+        </div>
+        <p id="codeErrorMsg" class="error-message" aria-live="polite"></p>
       </div>
 
       <!-- Estado B: Regalo Revelado -->
@@ -218,6 +221,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <!-- Script con la lógica -->
-  <script src="script.js?v=1.2"></script>
+  <script src="script.js?v=1.5"></script>
 </body>
 </html>

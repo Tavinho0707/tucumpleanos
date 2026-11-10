@@ -17,7 +17,7 @@ const firebaseConfig = {
 const daysData = [
   {
     day: 1,
-    unlockDate: "2026-11-19",
+    unlockDate: "2026-11-10",
     dateText: "19 Nov",
     fullDate: "19 de Noviembre",
     code: "INICIO19",
@@ -240,7 +240,10 @@ const STORAGE_KEY = 'advent_18_unlocked_days';
 let activeDay = null;
 let db = null;
 let docRef = null;
+let daysConfigDocRef = null;
 let unlockedDays = loadLocalUnlockedDays();
+let codeErrorAnimationTimer = null;
+let codeErrorMessageTimer = null;
 
 function loadLocalUnlockedDays() {
   const data = localStorage.getItem(STORAGE_KEY);
@@ -280,7 +283,7 @@ function listenToProgress() {
     renderCalendar();
     const adminModal = document.getElementById('adminModal');
     if (adminModal && !adminModal.classList.contains('hidden')) {
-      renderAdminPanel();
+      updateAdminProgress();
     }
   }, (error) => {
     console.error('Error al escuchar el progreso en Firestore:', error);
@@ -334,10 +337,13 @@ function initFirebase() {
     }
     db = firebase.firestore();
     docRef = db.collection('advent_calendar').doc('progreso');
+    daysConfigDocRef = db.collection('advent_calendar').doc('config_dias');
     listenToProgress();
+    listenToDaysConfig();
   } catch (error) {
     db = null;
     docRef = null;
+    daysConfigDocRef = null;
     console.error('Error al inicializar Firebase; se usará el progreso local:', error);
   }
 }
@@ -404,13 +410,16 @@ function openDayModal(dayNum) {
   const codeSec = document.getElementById('codeSection');
   const rewardSec = document.getElementById('rewardSection');
   const dateLockSec = document.getElementById('dateLockSection');
-  const errorText = document.getElementById('errorText');
+  const errorText = document.getElementById('codeErrorMsg');
   const input = document.getElementById('codeInput');
 
+  clearTimeout(codeErrorAnimationTimer);
+  clearTimeout(codeErrorMessageTimer);
+  input.classList.remove('input-error');
+  errorText.textContent = '';
   codeSec.classList.add('hidden');
   rewardSec.classList.add('hidden');
   dateLockSec.classList.add('hidden');
-  errorText.classList.add('hidden');
   input.value = '';
 
   if (isAlreadyUnlocked) {
@@ -425,12 +434,29 @@ function openDayModal(dayNum) {
     codeSec.classList.remove('hidden');
     document.getElementById('modalDayNumber').textContent = `Día ${activeDay.day}`;
     document.getElementById('modalDateTag').textContent = activeDay.fullDate;
-    document.getElementById('hintText').textContent = activeDay.hint || '';
+    updateDayHint(activeDay);
     
     setTimeout(() => input.focus(), 250);
   }
 
   modal.classList.remove('hidden');
+}
+
+function updateDayHint(dayData) {
+  const hintContainer = document.getElementById('hintContainer');
+  const hintText = document.getElementById('hintText');
+  if (!hintContainer || !hintText) return;
+
+  const today = new Date();
+  const currentDate = `${today.getFullYear()}-${String(today.getMonth() + 1).padStart(2, '0')}-${String(today.getDate()).padStart(2, '0')}`;
+  if (dayData.unlockDate && currentDate < dayData.unlockDate) {
+    hintContainer.classList.add('hint-locked');
+    hintText.textContent = `Esta pista se revelará el ${dayData.fullDate || dayData.dateText || dayData.unlockDate}. ¡Paciencia! ✨`;
+    return;
+  }
+
+  hintContainer.classList.remove('hint-locked');
+  hintText.textContent = dayData.hint || 'Busca muy bien en tu habitación...';
 }
 
 function verifyCode() {
@@ -439,17 +465,44 @@ function verifyCode() {
   const inputEl = document.getElementById('codeInput');
   const userCode = inputEl.value.trim().toUpperCase();
   const validCode = activeDay.code.trim().toUpperCase();
-  const errorText = document.getElementById('errorText');
 
   if (userCode === validCode) {
+    clearTimeout(codeErrorAnimationTimer);
+    clearTimeout(codeErrorMessageTimer);
+    inputEl.classList.remove('input-error');
+    document.getElementById('codeErrorMsg').textContent = '';
     saveUnlockedDay(activeDay.day);
     triggerConfetti();
     renderCalendar();
     showRewardView(activeDay);
   } else {
-    errorText.classList.remove('hidden');
-    inputEl.classList.add('shake-input');
-    setTimeout(() => inputEl.classList.remove('shake-input'), 400);
+    triggerCodeError();
+  }
+}
+
+function triggerCodeError(customText = '¡Código incorrecto! Revisa la pista escondida ✨') {
+  const inputEl = document.getElementById('codeInput');
+  const errorEl = document.getElementById('codeErrorMsg');
+
+  if (inputEl) {
+    clearTimeout(codeErrorAnimationTimer);
+    inputEl.classList.remove('input-error');
+    void inputEl.offsetWidth;
+    inputEl.classList.add('input-error');
+    inputEl.value = '';
+    inputEl.focus();
+
+    codeErrorAnimationTimer = setTimeout(() => {
+      inputEl.classList.remove('input-error');
+    }, 1000);
+  }
+
+  if (errorEl) {
+    clearTimeout(codeErrorMessageTimer);
+    errorEl.textContent = customText;
+    codeErrorMessageTimer = setTimeout(() => {
+      errorEl.textContent = '';
+    }, 2500);
   }
 }
 
@@ -629,40 +682,151 @@ function renderAdminPanel() {
   const listEl = document.getElementById('adminDaysList');
   if (!listEl) return;
 
-  const total = 18;
-  const openedCount = getUnlockedDays().length;
-  const percent = Math.round((openedCount / total) * 100);
-  document.getElementById('adminOpenedCount').textContent = openedCount;
-  document.getElementById('adminPendingCount').textContent = total - openedCount;
-  document.getElementById('adminPercent').textContent = `${percent}%`;
+  updateAdminProgress();
   listEl.replaceChildren();
 
-  for (let day = 1; day <= total; day++) {
-    const isUnlocked = getUnlockedDays().includes(day);
+  daysData.forEach((dayData) => {
+    const isUnlocked = getUnlockedDays().includes(dayData.day);
     const dayItem = document.createElement('div');
     dayItem.className = `admin-day-card ${isUnlocked ? 'unlocked' : 'locked'}`;
+    dayItem.dataset.day = dayData.day;
 
-    const dayInfo = document.createElement('div');
-    dayInfo.className = 'admin-day-info';
+    const top = document.createElement('div');
+    top.className = 'admin-card-top';
 
     const dayNumber = document.createElement('span');
     dayNumber.className = 'admin-day-num';
-    dayNumber.textContent = `Día ${day}`;
+    dayNumber.textContent = `Día ${dayData.day} (${dayData.dateText})`;
 
     const dayStatus = document.createElement('span');
-    dayStatus.className = 'admin-day-status';
+    dayStatus.className = 'admin-status-pill admin-day-status';
     dayStatus.textContent = isUnlocked ? '🔓 Abierto' : '🔒 Bloqueado';
+
+    top.append(dayNumber, dayStatus);
+
+    const codeField = createAdminConfigField('Clave:', `adminCode_${dayData.day}`, dayData.code, 'Ej: regalo20');
+    const hintField = createAdminConfigField('Pista:', `adminHint_${dayData.day}`, dayData.hint, 'Ej: Busca bajo la almohada');
+
+    const buttons = document.createElement('div');
+    buttons.className = 'admin-card-buttons';
+
+    const saveButton = document.createElement('button');
+    saveButton.className = 'btn-save-day';
+    saveButton.type = 'button';
+    saveButton.dataset.action = 'save';
+    saveButton.dataset.day = dayData.day;
+    saveButton.textContent = '💾 Guardar cambios';
 
     const toggleButton = document.createElement('button');
     toggleButton.className = 'btn-toggle-day';
     toggleButton.type = 'button';
-    toggleButton.dataset.day = day;
+    toggleButton.dataset.action = 'toggle';
+    toggleButton.dataset.day = dayData.day;
     toggleButton.textContent = isUnlocked ? 'Bloquear' : 'Forzar apertura';
 
-    dayInfo.append(dayNumber, dayStatus);
-    dayItem.append(dayInfo, toggleButton);
+    buttons.append(saveButton, toggleButton);
+    dayItem.append(top, codeField, hintField, buttons);
     listEl.appendChild(dayItem);
+  });
+}
+
+function createAdminConfigField(labelText, inputId, value, placeholder) {
+  const field = document.createElement('label');
+  field.className = 'admin-inputs-group';
+  field.htmlFor = inputId;
+
+  const label = document.createElement('span');
+  label.textContent = labelText;
+
+  const input = document.createElement('input');
+  input.id = inputId;
+  input.type = 'text';
+  input.value = typeof value === 'string' ? value : '';
+  input.placeholder = placeholder;
+  input.autocomplete = 'off';
+
+  field.append(label, input);
+  return field;
+}
+
+function updateAdminProgress() {
+  const openedCount = getUnlockedDays().length;
+  const total = daysData.length;
+  const percent = Math.round((openedCount / total) * 100);
+  document.getElementById('adminOpenedCount').textContent = openedCount;
+  document.getElementById('adminPendingCount').textContent = total - openedCount;
+  document.getElementById('adminPercent').textContent = `${percent}%`;
+
+  daysData.forEach((dayData) => {
+    const card = document.querySelector(`.admin-day-card[data-day="${dayData.day}"]`);
+    if (!card) return;
+
+    const isUnlocked = getUnlockedDays().includes(dayData.day);
+    card.classList.toggle('unlocked', isUnlocked);
+    card.classList.toggle('locked', !isUnlocked);
+    card.querySelector('.admin-day-status').textContent = isUnlocked ? '🔓 Abierto' : '🔒 Bloqueado';
+    card.querySelector('[data-action="toggle"]').textContent = isUnlocked ? 'Bloquear' : 'Forzar apertura';
+  });
+}
+
+async function saveDayConfig(dayNumber) {
+  const codeInput = document.getElementById(`adminCode_${dayNumber}`);
+  const hintInput = document.getElementById(`adminHint_${dayNumber}`);
+  const targetDay = daysData.find(day => day.day === dayNumber);
+  if (!targetDay || !codeInput || !hintInput) return;
+  if (!daysConfigDocRef) {
+    alert('Firestore no está disponible. No se pudo guardar la configuración.');
+    return;
   }
+
+  const code = codeInput.value.trim().toUpperCase();
+  const hint = hintInput.value.trim();
+  if (!code) {
+    alert('La clave no puede quedar vacía.');
+    codeInput.focus();
+    return;
+  }
+
+  try {
+    await daysConfigDocRef.set({
+      [`dia_${dayNumber}`]: { code, hint }
+    }, { merge: true });
+
+    targetDay.code = code;
+    targetDay.hint = hint;
+    alert(`✅ Día ${dayNumber} actualizado con éxito.`);
+  } catch (error) {
+    console.error('Error al guardar la configuración del día:', error);
+    alert('Error al guardar en Firebase.');
+  }
+}
+
+function listenToDaysConfig() {
+  daysConfigDocRef.onSnapshot((snapshot) => {
+    if (!snapshot.exists) return;
+
+    const config = snapshot.data();
+    let hasChanges = false;
+    daysData.forEach((dayData) => {
+      const dayConfig = config[`dia_${dayData.day}`];
+      if (!dayConfig || typeof dayConfig !== 'object') return;
+
+      if (typeof dayConfig.code === 'string' && dayConfig.code.trim()) {
+        dayData.code = dayConfig.code;
+      }
+      if (typeof dayConfig.hint === 'string') {
+        dayData.hint = dayConfig.hint;
+      }
+      hasChanges = true;
+    });
+
+    const adminModal = document.getElementById('adminModal');
+    if (hasChanges && adminModal && !adminModal.classList.contains('hidden')) {
+      renderAdminPanel();
+    }
+  }, (error) => {
+    console.error('Error al escuchar la configuración de los días en Firestore:', error);
+  });
 }
 
 async function toggleDayDirect(dayNumber) {
@@ -732,8 +896,15 @@ function initAdminPanel() {
     }
   });
   daysList.addEventListener('click', (event) => {
-    const button = event.target.closest('.btn-toggle-day');
-    if (button) toggleDayDirect(Number(button.dataset.day));
+    const button = event.target.closest('button[data-action]');
+    if (!button) return;
+
+    const dayNumber = Number(button.dataset.day);
+    if (button.dataset.action === 'save') {
+      saveDayConfig(dayNumber);
+    } else if (button.dataset.action === 'toggle') {
+      toggleDayDirect(dayNumber);
+    }
   });
   resetButton.addEventListener('click', async () => {
     if (!confirm('⚠️ ¿Seguro que quieres resetear TODO el calendario a 0?')) return;

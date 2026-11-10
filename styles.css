@@ -449,6 +449,37 @@ body {
 .modal-hint { font-size: 0.8rem; color: #8c7f83; margin-top: 12px; font-style: italic; }
 .modal-error { font-size: 0.85rem; color: #ff8585; margin-top: 10px; font-weight: 600; }
 
+/* Pista dinámica del día */
+.hint-box {
+  background: rgba(255, 117, 140, 0.08);
+  border: 1px dashed rgba(255, 117, 140, 0.4);
+  border-radius: 12px;
+  padding: 10px 14px;
+  margin: 12px 0 16px;
+  font-size: 0.85rem;
+  color: #4a5568;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  text-align: center;
+}
+
+.hint-box.hint-locked {
+  background: #f1f5f9;
+  border-color: #cbd5e1;
+  color: #64748b;
+}
+
+.hint-icon {
+  font-size: 1rem;
+}
+
+.hint-text {
+  font-weight: 500;
+  line-height: 1.4;
+}
+
 /* Sección Revelada */
 .unlocked-tag {
   display: inline-block;
@@ -531,14 +562,25 @@ body {
 
 .hidden { display: none !important; }
 
-.shake-input {
-  animation: shake 0.35s ease;
+.input-error {
+  animation: shake 0.4s ease-in-out !important;
+  border-color: #ef4444 !important;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2) !important;
 }
 
 @keyframes shake {
   0%, 100% { transform: translateX(0); }
-  25% { transform: translateX(-8px); }
-  75% { transform: translateX(8px); }
+  20%, 60% { transform: translateX(-8px); }
+  40%, 80% { transform: translateX(8px); }
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.85rem;
+  font-weight: 500;
+  margin-top: 8px;
+  min-height: 20px;
+  transition: opacity 0.2s ease;
 }
 
 @keyframes fadeIn {
@@ -953,10 +995,10 @@ body {
 
 .admin-day-card {
   display: flex;
-  justify-content: space-between;
-  align-items: center;
+  flex-direction: column;
+  align-items: stretch;
   gap: 8px;
-  padding: 8px 12px;
+  padding: 12px;
   border-radius: 10px;
   border: 1px solid #e2e8f0;
   font-size: 0.85rem;
@@ -971,10 +1013,12 @@ body {
   background: #fafafa;
 }
 
-.admin-day-info {
+.admin-card-top {
   display: flex;
-  flex-direction: column;
-  gap: 2px;
+  justify-content: space-between;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
 }
 
 .admin-day-num {
@@ -982,12 +1026,63 @@ body {
   color: #1e293b;
 }
 
+.admin-status-pill {
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
 .admin-day-status {
   font-size: 0.75rem;
   color: #64748b;
 }
 
+.admin-inputs-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.8rem;
+}
+
+.admin-inputs-group > span {
+  width: 45px;
+  flex-shrink: 0;
+  font-weight: 600;
+  color: #475569;
+}
+
+.admin-inputs-group input {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 8px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font: inherit;
+}
+
+.admin-card-buttons {
+  display: flex;
+  gap: 8px;
+  margin-top: 4px;
+}
+
+.btn-save-day {
+  flex: 1;
+  background: #3b82f6;
+  color: #ffffff;
+  border: none;
+  border-radius: 6px;
+  padding: 7px 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.btn-save-day:hover {
+  background: #2563eb;
+}
+
 .btn-toggle-day {
+  flex: 1;
   flex-shrink: 0;
   background: #ffffff;
   border: 1px solid #cbd5e1;
