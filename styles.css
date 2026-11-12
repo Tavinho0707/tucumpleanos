@@ -517,6 +517,34 @@ body {
   border-radius: 6px;
 }
 
+.gift-placeholder {
+  min-height: 180px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  padding: 16px;
+}
+
+.gift-placeholder p {
+  margin: 10px 0 0;
+  color: #e11d48;
+  font-size: 0.9rem;
+  font-weight: 600;
+}
+
+.gift-emoji-bounce {
+  display: inline-block;
+  font-size: 3.5rem;
+  animation: floatGift 2s ease-in-out infinite;
+}
+
+@keyframes floatGift {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
 .reward-title {
   font-family: 'Playfair Display', serif;
   font-size: 1.35rem;
@@ -1044,7 +1072,7 @@ body {
 }
 
 .admin-inputs-group > span {
-  width: 45px;
+  width: 58px;
   flex-shrink: 0;
   font-weight: 600;
   color: #475569;
@@ -1096,4 +1124,92 @@ body {
 .admin-day-card.unlocked .btn-toggle-day {
   color: #ef4444;
   border-color: #fca5a5;
+}
+
+/* ==========================================================
+   ESTILOS DEL MODAL DE PIN ADMIN
+========================================================== */
+.pin-card {
+  background: #ffffff;
+  border-radius: 24px;
+  max-width: 340px;
+  width: 100%;
+  padding: 28px 24px;
+  text-align: center;
+  position: relative;
+  box-shadow: 0 20px 45px rgba(15, 23, 42, 0.3);
+  animation: popIn 0.25s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.pin-close {
+  position: absolute;
+  top: 14px;
+  right: 16px;
+}
+
+.pin-icon {
+  font-size: 2.5rem;
+  margin-bottom: 8px;
+}
+
+.pin-card h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #1e293b;
+}
+
+.pin-sub {
+  margin: 4px 0 18px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.pin-input {
+  width: 100%;
+  padding: 12px;
+  font-size: 1.6rem;
+  letter-spacing: 8px;
+  text-align: center;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  background: #f8fafc;
+  color: #0f172a;
+  font-weight: 700;
+  transition: all 0.2s;
+}
+
+.pin-input:focus {
+  outline: none;
+  border-color: #3b82f6;
+  background: #ffffff;
+  box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.15);
+}
+
+.pin-error-text {
+  color: #ef4444;
+  font-size: 0.8rem;
+  font-weight: 600;
+  min-height: 18px;
+  margin: 6px 0 10px;
+}
+
+.btn-pin-enter {
+  width: 100%;
+  background: #0f172a;
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  padding: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: background 0.2s, transform 0.1s;
+}
+
+.btn-pin-enter:hover {
+  background: #1e293b;
+}
+
+.btn-pin-enter:active {
+  transform: scale(0.98);
 }

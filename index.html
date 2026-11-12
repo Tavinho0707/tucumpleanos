@@ -115,7 +115,11 @@
         <span class="unlocked-tag">¡DETALLE DESBLOQUEADO! 🎁</span>
         
         <div class="gift-media-box">
-          <img id="rewardPhoto" src="" alt="Foto del detalle" onerror="handleImageError(this)">
+          <img id="rewardPhoto" src="" alt="Foto del detalle" class="hidden" onerror="handleImageError(this)">
+          <div id="rewardPlaceholder" class="gift-placeholder hidden">
+            <span class="gift-emoji-bounce" aria-hidden="true">🎁</span>
+            <p>¡Ve a reclamar tu detalle físico!</p>
+          </div>
         </div>
 
         <h3 id="rewardTitle" class="reward-title">Título del Regalo</h3>
@@ -178,6 +182,31 @@
 
   <!-- Botón flotante para volver a ver las instrucciones cuando quiera -->
   <button id="btnHelp" class="help-float-btn" type="button" title="Ver instrucciones" aria-label="Ver instrucciones">?</button>
+
+  <!-- Modal Personalizado de Acceso PIN Admin -->
+  <div id="pinModal" class="admin-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="pinTitle" aria-describedby="pinSubtitle" aria-hidden="true">
+    <div class="pin-card">
+      <button id="closePinBtn" class="admin-close pin-close" type="button" aria-label="Cerrar">&times;</button>
+      <div class="pin-icon" aria-hidden="true">🔐</div>
+      <h3 id="pinTitle">Modo Administrador</h3>
+      <p id="pinSubtitle" class="pin-sub">Ingresa tu PIN maestro para continuar</p>
+
+      <input
+        type="password"
+        id="adminPinInput"
+        class="pin-input"
+        maxlength="6"
+        inputmode="numeric"
+        placeholder="••••"
+        autocomplete="off"
+        aria-label="PIN de administrador"
+        aria-describedby="pinErrorMsg"
+      >
+      <p id="pinErrorMsg" class="pin-error-text" aria-live="polite"></p>
+
+      <button id="submitPinBtn" class="btn-pin-enter" type="button">Desbloquear Panel</button>
+    </div>
+  </div>
 
   <!-- Modal Panel de Monitoreo / Admin -->
   <div id="adminModal" class="admin-overlay hidden" role="dialog" aria-modal="true" aria-labelledby="adminTitle" aria-hidden="true">

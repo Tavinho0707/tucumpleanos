@@ -17,7 +17,7 @@ const firebaseConfig = {
 const daysData = [
   {
     day: 1,
-    unlockDate: "2026-11-10",
+    unlockDate: "2026-11-11",
     dateText: "19 Nov",
     fullDate: "19 de Noviembre",
     code: "INICIO19",
@@ -511,11 +511,21 @@ function showRewardView(item) {
   const rewardSec = document.getElementById('rewardSection');
   rewardSec.classList.remove('hidden');
 
-  document.getElementById('rewardTitle').textContent = item.giftTitle;
-  document.getElementById('rewardMessage').textContent = item.message;
+  document.getElementById('rewardTitle').textContent = item.giftTitle || `¡Sorpresa del Día ${item.day}!`;
+  document.getElementById('rewardMessage').textContent = item.message || 'Un pequeño detalle preparado con mucho cariño para ti.';
   
   const photoEl = document.getElementById('rewardPhoto');
-  photoEl.src = item.giftPhoto;
+  const placeholder = document.getElementById('rewardPlaceholder');
+  photoEl.onerror = () => handleImageError(photoEl);
+  if (typeof item.giftPhoto === 'string' && item.giftPhoto.trim()) {
+    placeholder.classList.add('hidden');
+    photoEl.classList.remove('hidden');
+    photoEl.src = item.giftPhoto.trim();
+  } else {
+    photoEl.removeAttribute('src');
+    photoEl.classList.add('hidden');
+    placeholder.classList.remove('hidden');
+  }
 }
 
 function closeModal() {
@@ -528,8 +538,9 @@ function handleBackdropClick(e) {
 }
 
 function handleImageError(img) {
-  // Imagen de respaldo estética si aún no has puesto el archivo en la carpeta img
-  img.src = 'https://images.unsplash.com/photo-1513201099705-a9742e15a5be?w=800&auto=format&fit=crop&q=80';
+  img.removeAttribute('src');
+  img.classList.add('hidden');
+  document.getElementById('rewardPlaceholder').classList.remove('hidden');
 }
 
 function triggerConfetti() {
@@ -659,18 +670,87 @@ let titleClickCount = 0;
 let titleClickTimer = null;
 
 function openAdminWithAuth() {
-  const inputPin = prompt('🔒 Acceso Administrador - Ingresa tu PIN:');
-  if (inputPin !== ADMIN_PIN) {
-    if (inputPin !== null) alert('PIN incorrecto.');
+  const pinModal = document.getElementById('pinModal');
+  const pinInput = document.getElementById('adminPinInput');
+  const pinError = document.getElementById('pinErrorMsg');
+  if (!pinModal || !pinInput) {
+    console.error('No se encontró #pinModal o #adminPinInput en el HTML.');
     return;
   }
 
-  const modal = document.getElementById('adminModal');
-  renderAdminPanel();
-  modal.classList.remove('hidden');
-  modal.setAttribute('aria-hidden', 'false');
-  document.getElementById('closeAdminBtn').focus();
+  pinInput.value = '';
+  pinInput.classList.remove('input-error');
+  if (pinError) pinError.textContent = '';
+  pinModal.classList.remove('hidden');
+  pinModal.setAttribute('aria-hidden', 'false');
+  setTimeout(() => pinInput.focus(), 100);
 }
+
+function closePinModal() {
+  const pinModal = document.getElementById('pinModal');
+  if (!pinModal) return;
+
+  pinModal.classList.add('hidden');
+  pinModal.setAttribute('aria-hidden', 'true');
+}
+
+function verifyAdminPin() {
+  const pinInput = document.getElementById('adminPinInput');
+  const pinError = document.getElementById('pinErrorMsg');
+  const adminModal = document.getElementById('adminModal');
+  if (!pinInput) {
+    console.error('No se encontró #adminPinInput en el HTML.');
+    return;
+  }
+
+  if (pinInput.value.trim() === ADMIN_PIN) {
+    closePinModal();
+    if (typeof renderAdminPanel === 'function') {
+      renderAdminPanel();
+    }
+
+    if (adminModal) {
+      adminModal.classList.remove('hidden');
+      adminModal.setAttribute('aria-hidden', 'false');
+      document.getElementById('closeAdminBtn')?.focus();
+    } else {
+      alert('Error: No se encontró el contenedor #adminModal en el HTML.');
+    }
+    return;
+  }
+
+  pinInput.classList.remove('input-error');
+  void pinInput.offsetWidth;
+  pinInput.classList.add('input-error');
+  pinInput.value = '';
+  pinInput.focus();
+  if (pinError) {
+    pinError.textContent = 'PIN incorrecto';
+    setTimeout(() => {
+      pinError.textContent = '';
+    }, 2000);
+  }
+}
+
+document.addEventListener('click', (event) => {
+  if (!(event.target instanceof Element)) return;
+
+  if (event.target.closest('#closePinBtn')) {
+    closePinModal();
+  } else if (event.target.closest('#submitPinBtn')) {
+    event.preventDefault();
+    verifyAdminPin();
+  }
+});
+
+document.addEventListener('keydown', (event) => {
+  if (event.target instanceof HTMLInputElement
+    && event.target.id === 'adminPinInput'
+    && event.key === 'Enter') {
+    event.preventDefault();
+    verifyAdminPin();
+  }
+});
 
 function closeAdminPanel() {
   const modal = document.getElementById('adminModal');
@@ -706,6 +786,9 @@ function renderAdminPanel() {
 
     const codeField = createAdminConfigField('Clave:', `adminCode_${dayData.day}`, dayData.code, 'Ej: regalo20');
     const hintField = createAdminConfigField('Pista:', `adminHint_${dayData.day}`, dayData.hint, 'Ej: Busca bajo la almohada');
+    const titleField = createAdminConfigField('Título:', `adminTitle_${dayData.day}`, dayData.giftTitle, 'Nombre del regalo');
+    const messageField = createAdminConfigField('Texto:', `adminMsg_${dayData.day}`, dayData.message, 'Dedicatoria al abrir');
+    const imageField = createAdminConfigField('Foto:', `adminImg_${dayData.day}`, dayData.giftPhoto, 'URL o ruta, ej: img/dia1.jpg');
 
     const buttons = document.createElement('div');
     buttons.className = 'admin-card-buttons';
@@ -725,7 +808,7 @@ function renderAdminPanel() {
     toggleButton.textContent = isUnlocked ? 'Bloquear' : 'Forzar apertura';
 
     buttons.append(saveButton, toggleButton);
-    dayItem.append(top, codeField, hintField, buttons);
+    dayItem.append(top, codeField, hintField, titleField, messageField, imageField, buttons);
     listEl.appendChild(dayItem);
   });
 }
@@ -772,8 +855,11 @@ function updateAdminProgress() {
 async function saveDayConfig(dayNumber) {
   const codeInput = document.getElementById(`adminCode_${dayNumber}`);
   const hintInput = document.getElementById(`adminHint_${dayNumber}`);
+  const titleInput = document.getElementById(`adminTitle_${dayNumber}`);
+  const messageInput = document.getElementById(`adminMsg_${dayNumber}`);
+  const imageInput = document.getElementById(`adminImg_${dayNumber}`);
   const targetDay = daysData.find(day => day.day === dayNumber);
-  if (!targetDay || !codeInput || !hintInput) return;
+  if (!targetDay || !codeInput || !hintInput || !titleInput || !messageInput || !imageInput) return;
   if (!daysConfigDocRef) {
     alert('Firestore no está disponible. No se pudo guardar la configuración.');
     return;
@@ -781,6 +867,9 @@ async function saveDayConfig(dayNumber) {
 
   const code = codeInput.value.trim().toUpperCase();
   const hint = hintInput.value.trim();
+  const giftTitle = titleInput.value.trim();
+  const message = messageInput.value.trim();
+  const image = imageInput.value.trim();
   if (!code) {
     alert('La clave no puede quedar vacía.');
     codeInput.focus();
@@ -789,11 +878,14 @@ async function saveDayConfig(dayNumber) {
 
   try {
     await daysConfigDocRef.set({
-      [`dia_${dayNumber}`]: { code, hint }
+      [`dia_${dayNumber}`]: { code, hint, giftTitle, message, image }
     }, { merge: true });
 
     targetDay.code = code;
     targetDay.hint = hint;
+    targetDay.giftTitle = giftTitle;
+    targetDay.message = message;
+    targetDay.giftPhoto = image;
     alert(`✅ Día ${dayNumber} actualizado con éxito.`);
   } catch (error) {
     console.error('Error al guardar la configuración del día:', error);
@@ -816,6 +908,17 @@ function listenToDaysConfig() {
       }
       if (typeof dayConfig.hint === 'string') {
         dayData.hint = dayConfig.hint;
+      }
+      if (typeof dayConfig.giftTitle === 'string') {
+        dayData.giftTitle = dayConfig.giftTitle;
+      }
+      if (typeof dayConfig.message === 'string') {
+        dayData.message = dayConfig.message;
+      }
+      if (typeof dayConfig.image === 'string') {
+        dayData.giftPhoto = dayConfig.image;
+      } else if (typeof dayConfig.giftPhoto === 'string') {
+        dayData.giftPhoto = dayConfig.giftPhoto;
       }
       hasChanges = true;
     });
@@ -856,6 +959,7 @@ async function toggleDayDirect(dayNumber) {
 function initAdminPanel() {
   const title = document.querySelector('.main-title');
   const modal = document.getElementById('adminModal');
+  const pinModal = document.getElementById('pinModal');
   const closeButton = document.getElementById('closeAdminBtn');
   const daysList = document.getElementById('adminDaysList');
   const resetButton = document.getElementById('resetAllBtn');
@@ -887,12 +991,19 @@ function initAdminPanel() {
     }
   });
   closeButton.addEventListener('click', closeAdminPanel);
+  pinModal.addEventListener('click', (event) => {
+    if (event.target === pinModal) closePinModal();
+  });
   modal.addEventListener('click', (event) => {
     if (event.target === modal) closeAdminPanel();
   });
   document.addEventListener('keydown', (event) => {
-    if (event.key === 'Escape' && !modal.classList.contains('hidden')) {
-      closeAdminPanel();
+    if (event.key === 'Escape') {
+      if (!pinModal.classList.contains('hidden')) {
+        closePinModal();
+      } else if (!modal.classList.contains('hidden')) {
+        closeAdminPanel();
+      }
     }
   });
   daysList.addEventListener('click', (event) => {
