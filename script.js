@@ -17,7 +17,7 @@ const firebaseConfig = {
 const daysData = [
   {
     day: 1,
-    unlockDate: "2026-11-11",
+    unlockDate: "2026-11-19",
     dateText: "19 Nov",
     fullDate: "19 de Noviembre",
     code: "INICIO19",
