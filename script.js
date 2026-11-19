@@ -23,7 +23,7 @@ const daysData = [
     code: "INICIO19",
     hint: "El inicio de nuestra cuenta regresiva especial.",
     giftTitle: "Comienza la aventura",
-    giftPhoto: "img/regalo-1.jpg",
+    giftPhoto: "img/signo.jpg",
     message: "¡Arrancan oficialmente tus 18 días! Cada fecha que pase será un detalle pensado solo para sacarte una sonrisa."
   },
   {
@@ -214,6 +214,11 @@ const daysData = [
     message: "Llegó tu día. Eres una persona increíble, llena de metas y con un corazón enorme. Gracias por dejarme ser parte de tu vida y celebrar estos 18 años juntos. ¡Te amo con todo mi ser!"
   }
 ];
+const PREVIOUS_DAY_ONE_IMAGE_PATHS = new Set([
+  'img/regalo-1.jpg',
+  'img/fotoregalo-1.jpg',
+  'img/fotoregalos.jpg'
+]);
 
 // MODO PRUEBAS:
 // Ponlo en true mientras programas para poder abrir cualquier día y probar tus códigos.
@@ -238,9 +243,28 @@ function isDayDateAvailable(unlockDateStr) {
 ========================================================== */
 const STORAGE_KEY = 'advent_18_unlocked_days';
 let activeDay = null;
+let activeGiftDayNumber = null;
+const giftLevelNames = {
+  bajo: '🟢 Detalle Especial',
+  medio: '🟣 Gran Sorpresa',
+  alto: '🟡 Regalo Épico ✨'
+};
+const giftLevelOptions = {
+  ninguno: '⚪ Sin asignar (Blanco)',
+  bajo: '🟢 Bajo (Detalle)',
+  medio: '🟣 Medio (Sorpresa)',
+  alto: '🟡 Alto (Regalo Top)'
+};
+
+function getGiftLevel(dayData) {
+  return Object.prototype.hasOwnProperty.call(giftLevelOptions, dayData.level)
+    ? dayData.level
+    : 'ninguno';
+}
 let db = null;
 let docRef = null;
 let daysConfigDocRef = null;
+let userPhotosDocRef = null;
 let unlockedDays = loadLocalUnlockedDays();
 let codeErrorAnimationTimer = null;
 let codeErrorMessageTimer = null;
@@ -338,12 +362,15 @@ function initFirebase() {
     db = firebase.firestore();
     docRef = db.collection('advent_calendar').doc('progreso');
     daysConfigDocRef = db.collection('advent_calendar').doc('config_dias');
+    userPhotosDocRef = db.collection('advent_calendar').doc('fotos_dias');
     listenToProgress();
     listenToDaysConfig();
+    listenToUserPhotos();
   } catch (error) {
     db = null;
     docRef = null;
     daysConfigDocRef = null;
+    userPhotosDocRef = null;
     console.error('Error al inicializar Firebase; se usará el progreso local:', error);
   }
 }
@@ -363,7 +390,9 @@ function renderCalendar() {
     const isFutureLocked = !isDayDateAvailable(item.unlockDate);
     const isCurrentActive = !isUnlocked && item.unlockDate === todayDate;
     const card = document.createElement('div');
+    const level = getGiftLevel(item);
     card.className = `day-card ${isUnlocked ? 'unlocked' : ''} ${isFutureLocked ? 'future-locked' : ''} ${isCurrentActive ? 'current-active' : ''} ${item.day === 18 ? 'day-18' : ''}`;
+    if (level !== 'ninguno') card.classList.add(`level-${level}`);
     card.onclick = () => openDayModal(item.day);
 
     let statusIcon = isUnlocked ? '🎁' : '🔒';
@@ -510,17 +539,41 @@ function showRewardView(item) {
   document.getElementById('codeSection').classList.add('hidden');
   const rewardSec = document.getElementById('rewardSection');
   rewardSec.classList.remove('hidden');
+  activeGiftDayNumber = item.day;
+
+  const currentLevel = getGiftLevel(item);
+  const badge = document.getElementById('giftLevelBadge');
+  if (currentLevel !== 'ninguno' && giftLevelNames[currentLevel]) {
+    badge.className = `unlocked-tag badge-${currentLevel}`;
+    badge.textContent = `Día ${String(item.day).padStart(2, '0')} • ${giftLevelNames[currentLevel]}`;
+  } else {
+    badge.className = 'unlocked-tag';
+    badge.textContent = `Día ${String(item.day).padStart(2, '0')} • ${item.fullDate || item.dateText}`;
+  }
 
   document.getElementById('rewardTitle').textContent = item.giftTitle || `¡Sorpresa del Día ${item.day}!`;
   document.getElementById('rewardMessage').textContent = item.message || 'Un pequeño detalle preparado con mucho cariño para ti.';
   
+  const uploadStatus = document.getElementById('uploadStatusText');
+  if (uploadStatus) {
+    uploadStatus.textContent = '';
+    uploadStatus.classList.remove('upload-error');
+  }
+  renderGiftPhoto(item);
+}
+
+function renderGiftPhoto(item) {
   const photoEl = document.getElementById('rewardPhoto');
   const placeholder = document.getElementById('rewardPlaceholder');
+  const deleteButton = document.getElementById('deletePhotoBtn');
+  const photoToShow = item.userPhoto || item.legacyUserPhoto || item.giftPhoto;
+  if (deleteButton) deleteButton.classList.toggle('hidden', !item.userPhoto && !item.legacyUserPhoto);
+
   photoEl.onerror = () => handleImageError(photoEl);
-  if (typeof item.giftPhoto === 'string' && item.giftPhoto.trim()) {
+  if (typeof photoToShow === 'string' && photoToShow.trim()) {
     placeholder.classList.add('hidden');
     photoEl.classList.remove('hidden');
-    photoEl.src = item.giftPhoto.trim();
+    photoEl.src = photoToShow.trim();
   } else {
     photoEl.removeAttribute('src');
     photoEl.classList.add('hidden');
@@ -531,6 +584,7 @@ function showRewardView(item) {
 function closeModal() {
   document.getElementById('unlockModal').classList.add('hidden');
   activeDay = null;
+  activeGiftDayNumber = null;
 }
 
 function handleBackdropClick(e) {
@@ -789,6 +843,7 @@ function renderAdminPanel() {
     const titleField = createAdminConfigField('Título:', `adminTitle_${dayData.day}`, dayData.giftTitle, 'Nombre del regalo');
     const messageField = createAdminConfigField('Texto:', `adminMsg_${dayData.day}`, dayData.message, 'Dedicatoria al abrir');
     const imageField = createAdminConfigField('Foto:', `adminImg_${dayData.day}`, dayData.giftPhoto, 'URL o ruta, ej: img/dia1.jpg');
+    const levelField = createAdminLevelField(dayData.day, getGiftLevel(dayData));
 
     const buttons = document.createElement('div');
     buttons.className = 'admin-card-buttons';
@@ -808,9 +863,31 @@ function renderAdminPanel() {
     toggleButton.textContent = isUnlocked ? 'Bloquear' : 'Forzar apertura';
 
     buttons.append(saveButton, toggleButton);
-    dayItem.append(top, codeField, hintField, titleField, messageField, imageField, buttons);
+    dayItem.append(top, codeField, hintField, titleField, messageField, imageField, levelField, buttons);
     listEl.appendChild(dayItem);
   });
+}
+
+function createAdminLevelField(dayNumber, level) {
+  const field = document.createElement('label');
+  field.className = 'admin-inputs-group';
+  field.htmlFor = `adminLevel_${dayNumber}`;
+
+  const label = document.createElement('span');
+  label.textContent = 'Nivel:';
+
+  const select = document.createElement('select');
+  select.id = `adminLevel_${dayNumber}`;
+  Object.entries(giftLevelOptions).forEach(([value, name]) => {
+    const option = document.createElement('option');
+    option.value = value;
+    option.textContent = name;
+    option.selected = level === value;
+    select.appendChild(option);
+  });
+
+  field.append(label, select);
+  return field;
 }
 
 function createAdminConfigField(labelText, inputId, value, placeholder) {
@@ -858,8 +935,9 @@ async function saveDayConfig(dayNumber) {
   const titleInput = document.getElementById(`adminTitle_${dayNumber}`);
   const messageInput = document.getElementById(`adminMsg_${dayNumber}`);
   const imageInput = document.getElementById(`adminImg_${dayNumber}`);
+  const levelInput = document.getElementById(`adminLevel_${dayNumber}`);
   const targetDay = daysData.find(day => day.day === dayNumber);
-  if (!targetDay || !codeInput || !hintInput || !titleInput || !messageInput || !imageInput) return;
+  if (!targetDay || !codeInput || !hintInput || !titleInput || !messageInput || !imageInput || !levelInput) return;
   if (!daysConfigDocRef) {
     alert('Firestore no está disponible. No se pudo guardar la configuración.');
     return;
@@ -870,6 +948,7 @@ async function saveDayConfig(dayNumber) {
   const giftTitle = titleInput.value.trim();
   const message = messageInput.value.trim();
   const image = imageInput.value.trim();
+  const level = getGiftLevel({ level: levelInput.value });
   if (!code) {
     alert('La clave no puede quedar vacía.');
     codeInput.focus();
@@ -878,7 +957,7 @@ async function saveDayConfig(dayNumber) {
 
   try {
     await daysConfigDocRef.set({
-      [`dia_${dayNumber}`]: { code, hint, giftTitle, message, image }
+      [`dia_${dayNumber}`]: { code, hint, giftTitle, message, image, level }
     }, { merge: true });
 
     targetDay.code = code;
@@ -886,6 +965,8 @@ async function saveDayConfig(dayNumber) {
     targetDay.giftTitle = giftTitle;
     targetDay.message = message;
     targetDay.giftPhoto = image;
+    targetDay.level = level;
+    renderCalendar();
     alert(`✅ Día ${dayNumber} actualizado con éxito.`);
   } catch (error) {
     console.error('Error al guardar la configuración del día:', error);
@@ -915,20 +996,58 @@ function listenToDaysConfig() {
       if (typeof dayConfig.message === 'string') {
         dayData.message = dayConfig.message;
       }
-      if (typeof dayConfig.image === 'string') {
-        dayData.giftPhoto = dayConfig.image;
-      } else if (typeof dayConfig.giftPhoto === 'string') {
-        dayData.giftPhoto = dayConfig.giftPhoto;
+      const configuredImage = typeof dayConfig.image === 'string'
+        ? dayConfig.image
+        : dayConfig.giftPhoto;
+      if (typeof configuredImage === 'string') {
+        dayData.giftPhoto = dayData.day === 1 && PREVIOUS_DAY_ONE_IMAGE_PATHS.has(configuredImage)
+          ? 'img/signo.jpg'
+          : configuredImage;
+      }
+      if (typeof dayConfig.userPhoto === 'string') {
+        dayData.legacyUserPhoto = dayConfig.userPhoto;
+      }
+      if (typeof dayConfig.level === 'string' && Object.prototype.hasOwnProperty.call(giftLevelOptions, dayConfig.level)) {
+        dayData.level = dayConfig.level;
       }
       hasChanges = true;
     });
 
+    if (hasChanges) renderCalendar();
     const adminModal = document.getElementById('adminModal');
     if (hasChanges && adminModal && !adminModal.classList.contains('hidden')) {
       renderAdminPanel();
     }
   }, (error) => {
     console.error('Error al escuchar la configuración de los días en Firestore:', error);
+  });
+}
+
+function listenToUserPhotos() {
+  userPhotosDocRef.onSnapshot((snapshot) => {
+    const photos = snapshot.exists ? snapshot.data() : {};
+    daysData.forEach((dayData) => {
+      const photo = photos[`dia_${dayData.day}`];
+      if (typeof photo === 'string' && photo.trim()) {
+        dayData.userPhoto = photo;
+      } else {
+        delete dayData.userPhoto;
+      }
+    });
+
+    const rewardSection = document.getElementById('rewardSection');
+    const modal = document.getElementById('unlockModal');
+    const activeDayData = daysData.find(dayData => dayData.day === activeGiftDayNumber);
+    if (activeDayData && !modal.classList.contains('hidden') && !rewardSection.classList.contains('hidden')) {
+      renderGiftPhoto(activeDayData);
+    }
+  }, (error) => {
+    console.error('Error al escuchar las fotos de los días en Firestore:', error);
+    const status = document.getElementById('uploadStatusText');
+    if (activeGiftDayNumber && status) {
+      status.textContent = 'No se pudo sincronizar la foto del recuerdo.';
+      status.classList.add('upload-error');
+    }
   });
 }
 
@@ -1036,6 +1155,175 @@ function initAdminPanel() {
   });
 }
 
+function initGiftPhotoUpload() {
+  const cameraInput = document.getElementById('talyCameraInput');
+  const galleryInput = document.getElementById('talyGalleryInput');
+  const cameraButton = document.getElementById('triggerCameraBtn');
+  const galleryButton = document.getElementById('triggerGalleryBtn');
+  const deleteButton = document.getElementById('deletePhotoBtn');
+  if (!cameraInput || !galleryInput || !cameraButton || !galleryButton || !deleteButton) return;
+
+  cameraButton.addEventListener('click', () => cameraInput.click());
+  galleryButton.addEventListener('click', () => galleryInput.click());
+  cameraInput.addEventListener('change', handlePhotoUpload);
+  galleryInput.addEventListener('change', handlePhotoUpload);
+  deleteButton.addEventListener('click', deleteGiftPhoto);
+}
+
+async function handlePhotoUpload(event) {
+  const input = event.currentTarget;
+  const file = input.files && input.files[0];
+  if (!file) return;
+
+  const dayNumber = activeGiftDayNumber;
+  const status = document.getElementById('uploadStatusText');
+  const cameraButton = document.getElementById('triggerCameraBtn');
+  const galleryButton = document.getElementById('triggerGalleryBtn');
+  const deleteButton = document.getElementById('deletePhotoBtn');
+  if (!dayNumber || !userPhotosDocRef) {
+    if (status) {
+      status.textContent = dayNumber
+        ? 'Firebase no está disponible. No se pudo guardar la foto.'
+        : 'Abre un regalo antes de subir una foto.';
+      status.classList.add('upload-error');
+    }
+    input.value = '';
+    return;
+  }
+  if ((file.type && !file.type.startsWith('image/')) || file.size > 20 * 1024 * 1024) {
+    if (status) {
+      status.textContent = 'Elige una imagen de menos de 20 MB.';
+      status.classList.add('upload-error');
+    }
+    input.value = '';
+    return;
+  }
+
+  if (status) {
+    status.textContent = 'Comprimiendo y guardando recuerdo... ⏳';
+    status.classList.remove('upload-error');
+  }
+  cameraButton.disabled = true;
+  galleryButton.disabled = true;
+  deleteButton.disabled = true;
+
+  try {
+    const compressedPhoto = await compressImageToBase64(file, 700, 0.75);
+    if (compressedPhoto.length > 700 * 1024) {
+      throw new Error('La foto comprimida excede el tamaño permitido para Firestore.');
+    }
+
+    await userPhotosDocRef.set({
+      [`dia_${dayNumber}`]: compressedPhoto
+    }, { merge: true });
+
+    const targetDay = daysData.find(day => day.day === dayNumber);
+    if (targetDay) targetDay.userPhoto = compressedPhoto;
+    if (activeGiftDayNumber === dayNumber && targetDay) {
+      renderGiftPhoto(targetDay);
+      if (status) status.textContent = '¡Foto guardada en nuestro recuerdo! 💖';
+    }
+  } catch (error) {
+    console.error('Error al subir la foto del regalo:', error);
+    if (activeGiftDayNumber === dayNumber && status) {
+      status.textContent = 'Hubo un problema al subir la foto. Intenta de nuevo.';
+      status.classList.add('upload-error');
+    }
+  } finally {
+    cameraButton.disabled = false;
+    galleryButton.disabled = false;
+    deleteButton.disabled = false;
+    input.value = '';
+  }
+}
+
+async function deleteGiftPhoto() {
+  const dayNumber = activeGiftDayNumber;
+  const targetDay = daysData.find(day => day.day === dayNumber);
+  if (!targetDay || (!targetDay.userPhoto && !targetDay.legacyUserPhoto)) return;
+  if (!confirm('¿Quieres borrar esta foto?')) return;
+
+  const status = document.getElementById('uploadStatusText');
+  const cameraButton = document.getElementById('triggerCameraBtn');
+  const galleryButton = document.getElementById('triggerGalleryBtn');
+  const deleteButton = document.getElementById('deletePhotoBtn');
+  if (status) {
+    status.textContent = 'Borrando foto...';
+    status.classList.remove('upload-error');
+  }
+  cameraButton.disabled = true;
+  galleryButton.disabled = true;
+  deleteButton.disabled = true;
+
+  try {
+    const deleteRequests = [];
+    if (targetDay.userPhoto) {
+      if (!userPhotosDocRef) throw new Error('Firestore no está disponible para borrar la foto.');
+      deleteRequests.push(userPhotosDocRef.update({
+        [`dia_${dayNumber}`]: firebase.firestore.FieldValue.delete()
+      }));
+    }
+    if (targetDay.legacyUserPhoto) {
+      if (!daysConfigDocRef) throw new Error('Firestore no está disponible para borrar la foto anterior.');
+      deleteRequests.push(daysConfigDocRef.update({
+        [`dia_${dayNumber}.userPhoto`]: firebase.firestore.FieldValue.delete()
+      }));
+    }
+    await Promise.all(deleteRequests);
+
+    delete targetDay.userPhoto;
+    delete targetDay.legacyUserPhoto;
+    if (activeGiftDayNumber === dayNumber) {
+      renderGiftPhoto(targetDay);
+      if (status) status.textContent = 'Foto eliminada.';
+    }
+  } catch (error) {
+    console.error('Error al borrar la foto del regalo:', error);
+    if (activeGiftDayNumber === dayNumber && status) {
+      status.textContent = 'No se pudo borrar la foto. Intenta de nuevo.';
+      status.classList.add('upload-error');
+    }
+  } finally {
+    cameraButton.disabled = false;
+    galleryButton.disabled = false;
+    deleteButton.disabled = false;
+  }
+}
+
+function compressImageToBase64(file, maxDimension, quality) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader();
+    reader.onerror = () => reject(new Error('No se pudo leer el archivo de imagen.'));
+    reader.onload = () => {
+      if (typeof reader.result !== 'string') {
+        reject(new Error('El archivo de imagen no se pudo procesar.'));
+        return;
+      }
+
+      const image = new Image();
+      image.onerror = () => reject(new Error('El formato de imagen no es compatible.'));
+      image.onload = () => {
+        try {
+          const scale = Math.min(1, maxDimension / Math.max(image.naturalWidth, image.naturalHeight));
+          const width = Math.round(image.naturalWidth * scale);
+          const height = Math.round(image.naturalHeight * scale);
+          const canvas = document.createElement('canvas');
+          canvas.width = width;
+          canvas.height = height;
+          const context = canvas.getContext('2d');
+          if (!context) throw new Error('No se pudo preparar la imagen para comprimirla.');
+          context.drawImage(image, 0, 0, width, height);
+          resolve(canvas.toDataURL('image/jpeg', quality));
+        } catch (error) {
+          reject(error);
+        }
+      };
+      image.src = reader.result;
+    };
+    reader.readAsDataURL(file);
+  });
+}
+
 // Permitir tecla Enter en el campo de texto
 document.addEventListener('DOMContentLoaded', () => {
   renderCalendar();
@@ -1044,6 +1332,7 @@ document.addEventListener('DOMContentLoaded', () => {
   initFirebase();
   initWelcomeModal();
   initAdminPanel();
+  initGiftPhotoUpload();
   window.addEventListener('resize', generateBackgroundPattern);
   
   document.getElementById('codeInput').addEventListener('keydown', (e) => {

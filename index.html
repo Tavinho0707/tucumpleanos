@@ -19,7 +19,7 @@
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&family=Playfair+Display:ital,wght@0,600;0,700;1,500&display=swap" rel="stylesheet">
-  <link rel="stylesheet" href="styles.css?v=1.5">
+  <link rel="stylesheet" href="styles.css?v=1.6">
 
   <!-- Librería Confetti -->
   <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
@@ -32,7 +32,7 @@
     <header class="app-header">
       <span class="badge-header">18 Días para tus 18 ✨</span>
       <h1 class="main-title">TU Cuenta Regresiva</h1>
-      <p class="subtitle">Cada día desbloquea un detalle hasta llegar a tu gran cumpleaños, el 6 de diciembre.</p>
+      <p class="subtitle">Cada día desbloquea un detalle hasta llegar a tu cumpleaños, el 6 de diciembre.</p>
 
       <!-- Contador Regresivo en Vivo -->
       <div class="countdown-container">
@@ -89,7 +89,7 @@
         <div class="modal-header-icon">🔐</div>
         <h3 id="modalDayNumber" class="modal-title">Día 1</h3>
         <p id="modalDateTag" class="modal-date">19 de Noviembre</p>
-        <p class="modal-instruction">Encuentra la pista escondida en tu cuarto e ingresa aquí la clave secreta:</p>
+        <p class="modal-instruction">Encuentra la pista e ingresa aquí la clave secreta:</p>
         
         <div class="input-card">
           <input 
@@ -112,7 +112,7 @@
 
       <!-- Estado B: Regalo Revelado -->
       <div id="rewardSection" class="hidden">
-        <span class="unlocked-tag">¡DETALLE DESBLOQUEADO! 🎁</span>
+        <span id="giftLevelBadge" class="unlocked-tag">¡DETALLE DESBLOQUEADO! 🎁</span>
         
         <div class="gift-media-box">
           <img id="rewardPhoto" src="" alt="Foto del detalle" class="hidden" onerror="handleImageError(this)">
@@ -120,6 +120,17 @@
             <span class="gift-emoji-bounce" aria-hidden="true">🎁</span>
             <p>¡Ve a reclamar tu detalle físico!</p>
           </div>
+        </div>
+
+        <div class="upload-memory-box">
+          <input type="file" id="talyCameraInput" accept="image/*" capture="user" class="hidden">
+          <input type="file" id="talyGalleryInput" accept="image/*" class="hidden">
+          <div class="photo-actions-row">
+            <button type="button" id="triggerCameraBtn" class="btn-upload-photo">📷 Tomar foto</button>
+            <button type="button" id="triggerGalleryBtn" class="btn-upload-photo btn-secondary-photo">🖼️ Galería</button>
+            <button type="button" id="deletePhotoBtn" class="btn-delete-photo hidden" title="Eliminar foto" aria-label="Eliminar foto">🗑️</button>
+          </div>
+          <p id="uploadStatusText" class="upload-status" aria-live="polite"></p>
         </div>
 
         <h3 id="rewardTitle" class="reward-title">Título del Regalo</h3>
@@ -157,14 +168,14 @@
         <div class="rule-item">
           <span class="rule-badge">1</span>
           <div>
-            <strong>Un día a la vez:</strong> A partir del <strong>19 de noviembre</strong>, se habilitará una nueva casilla cada día hasta llegar a tu gran cumpleaños el <strong>6 de diciembre</strong>.
+            <strong>Un día a la vez:</strong> A partir de hoy <strong>19 de noviembre</strong>, se habilitará una nueva casilla cada día hasta llegar a tu cumpleaños el <strong>6 de diciembre</strong>.
           </div>
         </div>
 
         <div class="rule-item">
           <span class="rule-badge">2</span>
           <div>
-            <strong>El candado secreto:</strong> Cada sorpresa está protegida. Para abrirla necesitarás un <strong>código secreto diario</strong> que yo te daré.
+            <strong>El candado secreto:</strong> Cada sorpresa está protegida. Para abrirla necesitarás un <strong>código secreto diario</strong> que yo te daré las intrucciones de como obtenerlo.
           </div>
         </div>
 
@@ -172,6 +183,31 @@
           <span class="rule-badge">3</span>
           <div>
             <strong>Tu progreso:</strong> Cada detalle que desbloquees se quedará guardado para que puedas volver a verlo cuando quieras.
+          </div>
+        </div>
+
+        <div class="rule-item">
+          <span class="rule-badge">4</span>
+          <div>
+            <strong>Niveles de sorpresa:</strong> El color de cada casilla revela qué tipo de regalo te espera ese día:
+            <div style="display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px;">
+              <span style="background: #d1fae5; color: #065f46; border: 1px solid #10b981; padding: 3px 9px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;">
+                🟢 Detalle Suave
+              </span>
+              <span style="background: #e0e7ff; color: #3730a3; border: 1px solid #6366f1; padding: 3px 9px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;">
+                🟣 Detalle Medio
+              </span>
+              <span style="background: #fef3c7; color: #92400e; border: 1px solid #f59e0b; padding: 3px 9px; border-radius: 12px; font-size: 0.78rem; font-weight: 700;">
+                🟡 Detalle Fuerte
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <div class="rule-item">
+          <span class="rule-badge">5</span>
+          <div>
+            <strong>Guarda el recuerdo:</strong> Cuando recibas tu regalo, tómale una foto desde la misma tarjeta para dejarlo guardado.
           </div>
         </div>
       </div>
@@ -250,6 +286,6 @@
   <script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
 
   <!-- Script con la lógica -->
-  <script src="script.js?v=1.5"></script>
+  <script src="script.js?v=1.7"></script>
 </body>
 </html>

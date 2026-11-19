@@ -1213,3 +1213,164 @@ body {
 .btn-pin-enter:active {
   transform: scale(0.98);
 }
+
+/* ==========================================================
+   NIVELES DE REGALO (BAJO, MEDIO, ALTO)
+========================================================== */
+.level-bajo {
+  border: 2px solid #10b981 !important;
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%) !important;
+  color: #065f46 !important;
+}
+
+.badge-bajo {
+  background: #10b981 !important;
+  color: #ffffff !important;
+}
+
+.level-medio {
+  border: 2px solid #6366f1 !important;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%) !important;
+  color: #3730a3 !important;
+}
+
+.badge-medio {
+  background: #6366f1 !important;
+  color: #ffffff !important;
+}
+
+.level-alto {
+  border: 2px solid #f59e0b !important;
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 100%) !important;
+  color: #92400e !important;
+  box-shadow: 0 4px 15px rgba(245, 158, 11, 0.25);
+}
+
+.badge-alto {
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%) !important;
+  color: #ffffff !important;
+}
+
+.day-card.level-bajo,
+.day-card.level-medio,
+.day-card.level-alto {
+  border-width: 2px !important;
+}
+
+.day-card.level-bajo {
+  border-color: #10b981 !important;
+}
+
+.day-card.level-medio {
+  border-color: #6366f1 !important;
+}
+
+.day-card.level-alto {
+  border-color: #f59e0b !important;
+}
+
+.day-card.level-bajo .card-num,
+.day-card.level-bajo .card-date {
+  color: #065f46 !important;
+}
+
+.day-card.level-medio .card-num,
+.day-card.level-medio .card-date {
+  color: #3730a3 !important;
+}
+
+.day-card.level-alto .card-num,
+.day-card.level-alto .card-date {
+  color: #92400e !important;
+}
+
+.admin-inputs-group select {
+  flex: 1;
+  min-width: 0;
+  padding: 6px 10px;
+  border: 1px solid #cbd5e1;
+  border-radius: 6px;
+  font-size: 0.8rem;
+  background: #ffffff;
+  color: #1e293b;
+  font-weight: 600;
+}
+
+/* ==========================================================
+   BOTONES DE CÁMARA, GALERÍA Y BORRADO DE FOTO
+========================================================== */
+.upload-memory-box {
+  margin-bottom: 14px;
+  text-align: center;
+}
+
+.photo-actions-row {
+  display: flex;
+  gap: 8px;
+  justify-content: center;
+}
+
+.btn-upload-photo {
+  flex: 1;
+  background: #fff1f2;
+  color: #e11d48;
+  border: 1.5px dashed #fb7185;
+  padding: 9px 10px;
+  border-radius: 12px;
+  font-size: 0.82rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-upload-photo:hover {
+  background: #ffe4e6;
+}
+
+.btn-secondary-photo {
+  background: #f8fafc;
+  color: #475569;
+  border-color: #cbd5e1;
+}
+
+.btn-secondary-photo:hover {
+  background: #f1f5f9;
+}
+
+.btn-delete-photo {
+  flex: 0 0 auto;
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1.5px solid #fecaca;
+  padding: 9px 12px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-delete-photo:hover {
+  background: #fee2e2;
+}
+
+.btn-upload-photo:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.btn-delete-photo:disabled {
+  cursor: wait;
+  opacity: 0.65;
+}
+
+.upload-status {
+  font-size: 0.78rem;
+  color: #059669;
+  font-weight: 600;
+  margin: 6px 0 0;
+  min-height: 16px;
+}
+
+.upload-status.upload-error {
+  color: #e11d48;
+}
